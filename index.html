@@ -1,0 +1,63 @@
+<script>
+
+function add(text, cls){
+  let div = document.createElement("div");
+  div.className = "msg " + cls;
+  div.innerText = text;
+  document.getElementById("chat").appendChild(div);
+  div.scrollIntoView();
+}
+
+function addTyping(){
+  let div = document.createElement("div");
+  div.className = "msg bot typing";
+  div.id = "typing";
+  div.innerText = "⏳ يفكر...";
+  document.getElementById("chat").appendChild(div);
+  div.scrollIntoView();
+}
+
+function removeTyping(){
+  let t = document.getElementById("typing");
+  if(t) t.remove();
+}
+
+async function send(){
+
+  let input = document.getElementById("input");
+  let text = input.value.trim();
+  if(!text) return;
+
+  add(text,"user");
+  input.value="";
+
+  addTyping();
+
+  try{
+
+    const res = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer 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"
+      },
+      body:JSON.stringify({
+        inputs: "أجب بالعربية: " + text
+      })
+    });
+
+    const data = await res.json();
+
+    removeTyping();
+
+    let reply = data?.[0]?.generated_text || "⚠️ ماكانش رد";
+
+    add(reply,"bot");
+
+  }catch(e){
+    removeTyping();
+    add("❌ خطأ في الاتصال","bot");
+  }
+}
+
+</script>
